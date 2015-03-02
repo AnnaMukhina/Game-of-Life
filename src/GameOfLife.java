@@ -7,6 +7,7 @@ public class GameOfLife {
 
     public boolean isAlive(int[][] field){
         boolean alive = false;
+
         for(int i = 0;i < field.length; i++) {
             for (int j = 0; j < field.length; j++) {
                 if(field[i][j] == 1){
@@ -30,14 +31,17 @@ public class GameOfLife {
             }
         }
 
-        int i = 0;
         System.out.println("Next generation:");
+
+        int i = 0;
 
         while(i < field.length){
             for(int j = 0; j < field.length; j++){
                 System.out.print(field[i][j]);
             }
+
             System.out.println();
+
             i++;
         }
         System.out.println();
@@ -47,6 +51,7 @@ public class GameOfLife {
 
     public int[][] birth(int[][] field){
         int[][] newCells = new int[3][3];
+
         for(int i = 0; i < field.length; i++){
             for(int j = 0; j < field.length; j++){
                 if(field[i][j] == 0){
@@ -64,7 +69,9 @@ public class GameOfLife {
 
     public int neighbors(int[][] field, int i, int j){
         boolean[] neighbors = new boolean[8];
+
         Arrays.fill(neighbors, false);
+
         if(i-1 >= 0){
             neighbors[0] = field[i - 1][j] == 1;
         }
@@ -89,9 +96,11 @@ public class GameOfLife {
         if(i+1 < field.length && j+1 < field.length){
             neighbors[7] = field[i+1][j+1] == 1;
         }
+
         int numberOfNeighbors = 0;
+
         for(boolean b:neighbors){
-            if(b == true){
+            if(b){
                 numberOfNeighbors++;
             }
         }
@@ -100,6 +109,7 @@ public class GameOfLife {
 
     public int[][] death(int[][] field){
         int[][] survivedCells = new int[3][3];
+
         for(int i = 0; i < field.length; i++){
             for(int j = 0; j < field.length; j++){
                 int num = neighbors(field, i, j);
@@ -128,11 +138,13 @@ public class GameOfLife {
         System.out.println("First generation:");
 
         int i = 0;
+
         while(i < field.length){
             for(int j = 0; j < field.length; j++){
                 System.out.print(field[i][j]);
             }
         System.out.println();
+
         i++;
         }
 
