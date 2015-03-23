@@ -5,11 +5,33 @@ import java.util.*;
  */
 public class GameOfLife {
 
-    public boolean isAlive(int[][] field){
+    private final int height;
+
+    private final int width;
+
+    private int[][] oldField;
+
+    private int[][] field;
+
+    public GameOfLife(final int height, final int width)
+    {
+        this.height = height;
+        this.width = width;
+        this.field = new int[height][width];
+        this.oldField = new int[height][width];
+
+        for(int i = 0; i < height; i++){
+            for(int j = 0; j < width; j++){
+                field[i][j] = (int)(Math.random()*2);
+            }
+        }
+    }
+
+    public boolean isAlive(){
         boolean alive = false;
 
-        for(int i = 0;i < field.length; i++) {
-            for (int j = 0; j < field.length; j++) {
+        for(int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
                 if(field[i][j] == 1){
                     alive = true;
                 }
@@ -18,44 +40,33 @@ public class GameOfLife {
         return alive;
     }
 
-    public int[][] createNewGeneration(int[][] field){
-        int[][] newCells = birth(field);
+    public void createNewGeneration(){
+        int[][] newCells = birth();
 
-        field = death(field);
+        for(int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                    oldField[i][j] = field[i][j];
+                }
+        }
 
-        for(int i = 0;i < field.length; i++) {
-            for (int j = 0; j < field.length; j++) {
+        field = death();
+
+        for(int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
                 if (newCells[i][j] == 1) {
                     field[i][j] = newCells[i][j];
                 }
             }
         }
-
-        System.out.println("Next generation:");
-
-        int i = 0;
-
-        while(i < field.length){
-            for(int j = 0; j < field.length; j++){
-                System.out.print(field[i][j]);
-            }
-
-            System.out.println();
-
-            i++;
-        }
-        System.out.println();
-
-        return field;
     }
 
-    public int[][] birth(int[][] field){
-        int[][] newCells = new int[3][3];
+    public int[][] birth(){
+        int[][] newCells = new int[height][width];
 
-        for(int i = 0; i < field.length; i++){
-            for(int j = 0; j < field.length; j++){
+        for(int i = 0; i < height; i++){
+            for(int j = 0; j < width; j++){
                 if(field[i][j] == 0){
-                    if(neighbors(field,i,j) == 3){
+                    if(neighbors(i,j) == 3){
                         newCells[i][j] = 1;
                     }
                     else{
@@ -67,7 +78,7 @@ public class GameOfLife {
         return newCells;
     }
 
-    public int neighbors(int[][] field, int i, int j){
+    public int neighbors(int i, int j){
         boolean[] neighbors = new boolean[8];
 
         Arrays.fill(neighbors, false);
@@ -75,10 +86,10 @@ public class GameOfLife {
         if(i-1 >= 0){
             neighbors[0] = field[i - 1][j] == 1;
         }
-        if(i+1 < field.length){
+        if(i+1 < height){
             neighbors[1] = field[i+1][j] == 1;
         }
-        if(j+1 < field.length){
+        if(j+1 < width){
             neighbors[2] = field[i][j+1] == 1;
         }
         if(j-1 >= 0){
@@ -87,13 +98,13 @@ public class GameOfLife {
         if(i-1 >= 0 && j-1 >= 0){
             neighbors[4] = field[i-1][j-1] == 1;
         }
-        if(i-1 >=0 && j+1 < field.length){
+        if(i-1 >=0 && j+1 < width){
             neighbors[5] = field[i-1][j+1] == 1;
         }
-        if(i+1 < field.length && j-1 >= 0){
+        if(i+1 < height && j-1 >= 0){
             neighbors[6] = field[i+1][j-1] == 1;
         }
-        if(i+1 < field.length && j+1 < field.length){
+        if(i+1 < height && j+1 < width){
             neighbors[7] = field[i+1][j+1] == 1;
         }
 
@@ -107,12 +118,12 @@ public class GameOfLife {
         return numberOfNeighbors;
     }
 
-    public int[][] death(int[][] field){
-        int[][] survivedCells = new int[3][3];
+    public int[][] death(){
+        int[][] survivedCells = new int[height][width];
 
-        for(int i = 0; i < field.length; i++){
-            for(int j = 0; j < field.length; j++){
-                int num = neighbors(field, i, j);
+        for(int i = 0; i < height; i++){
+            for(int j = 0; j < width; j++){
+                int num = neighbors(i, j);
                 if(num > 3 || num < 2){
                     survivedCells[i][j] = 0;
                 }
@@ -124,34 +135,44 @@ public class GameOfLife {
         return survivedCells;
     }
 
-    public static void main(String args[]){
-        GameOfLife gameOfLife = new GameOfLife();
-
-        int[][] field = new int[3][3];
-
-        for(int i = 0; i < field.length; i++){
-            for(int j = 0; j < field.length; j++){
-                field[i][j] = (int)(Math.random()*2);
-            }
-        }
-
+    public void play() {
         System.out.println("First generation:");
 
-        int i = 0;
-
-        while(i < field.length){
-            for(int j = 0; j < field.length; j++){
+        for(int i = 0; i < height; i++){
+            for(int j = 0; j < width; j++){
                 System.out.print(field[i][j]);
             }
+            System.out.println();
+        }
         System.out.println();
 
-        i++;
-        }
+        while(isAlive()) {
+            createNewGeneration();
 
-        System.out.println();
+            if(Arrays.deepEquals(oldField, field)) {
+                System.out.println("The following game goes in cycles.");
+                break;
+            }
+            else{
+                System.out.println("Next generation:");
 
-        while(gameOfLife.isAlive(field)){
-            field = gameOfLife.createNewGeneration(field);
+                for(int i = 0; i < height; i++){
+                    for(int j = 0; j < width; j++){
+                        System.out.print(field[i][j]);
+                    }
+                    System.out.println();
+                }
+                System.out.println();
+            }
         }
+    }
+
+    public static void main(String args[]){
+        int height = 5;
+        int width = 7;
+
+        GameOfLife gameOfLife = new GameOfLife(height, width);
+
+        gameOfLife.play();
     }
 }
