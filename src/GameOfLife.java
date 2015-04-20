@@ -4,165 +4,168 @@ import java.util.*;
  * @author anna_mukhina
  */
 public class GameOfLife {
+    private static class Field {
+        private int[][] current;
 
-    private final int height;
+        private int[][] old;
 
-    private final int width;
+        private final int height;
 
-    private int[][] oldField;
+        private final int width;
 
-    private int[][] field;
+        public Field(final int height, final int width)
+        {
+            this.height = height;
+            this.width = width;
+            this.current = new int[height][width];
+            this.old = new int[height][width];
 
-    public GameOfLife(final int height, final int width)
-    {
-        this.height = height;
-        this.width = width;
-        this.field = new int[height][width];
-        this.oldField = new int[height][width];
-
-        for(int i = 0; i < height; i++){
-            for(int j = 0; j < width; j++){
-                field[i][j] = (int)(Math.random()*2);
-            }
-        }
-    }
-
-    public boolean isAlive(){
-        boolean alive = false;
-
-        for(int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                if(field[i][j] == 1){
-                    alive = true;
-                }
-            }
-        }
-        return alive;
-    }
-
-    public void createNewGeneration(){
-        int[][] newCells = birth();
-
-        for(int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                    oldField[i][j] = field[i][j];
-                }
-        }
-
-        field = death();
-
-        for(int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                if (newCells[i][j] == 1) {
-                    field[i][j] = newCells[i][j];
+            for(int i = 0; i < height; i++){
+                for(int j = 0; j < width; j++){
+                    current[i][j] = (int)(Math.random()*2);
                 }
             }
         }
     }
 
-    public int[][] birth(){
-        int[][] newCells = new int[height][width];
+    private static class Game {
+        public boolean isAlive(Field field){
+            boolean alive = false;
 
-        for(int i = 0; i < height; i++){
-            for(int j = 0; j < width; j++){
-                if(field[i][j] == 0){
-                    if(neighbors(i,j) == 3){
-                        newCells[i][j] = 1;
+            for(int i = 0; i < field.height; i++) {
+                for (int j = 0; j < field.width; j++) {
+                    if(field.current[i][j] == 1){
+                        alive = true;
+                    }
+                }
+            }
+            return alive;
+        }
+
+        public void createNewGeneration(Field field){
+            int[][] newCells = birth(field);
+
+            for(int i = 0; i < field.height; i++) {
+                for (int j = 0; j < field.width; j++) {
+                    field.old[i][j] = field.current[i][j];
+                }
+            }
+
+            field.current = death(field);
+
+            for(int i = 0; i < field.height; i++) {
+                for (int j = 0; j < field.width; j++) {
+                    if (newCells[i][j] == 1) {
+                        field.current[i][j] = newCells[i][j];
+                    }
+                }
+            }
+        }
+
+        public int[][] birth(Field field){
+            int[][] newCells = new int[field.height][field.width];
+
+            for(int i = 0; i < field.height; i++){
+                for(int j = 0; j < field.width; j++){
+                    if(field.current[i][j] == 0){
+                        if(neighbors(i,j,field) == 3){
+                            newCells[i][j] = 1;
+                        }
+                        else{
+                            newCells[i][j] = 0;
+                        }
+                    }
+                }
+            }
+            return newCells;
+        }
+
+        public int neighbors(int i, int j, Field field){
+            boolean[] neighbors = new boolean[8];
+
+            Arrays.fill(neighbors, false);
+
+            if(i-1 >= 0){
+                neighbors[0] = field.current[i - 1][j] == 1;
+            }
+            if(i+1 < field.height){
+                neighbors[1] = field.current[i+1][j] == 1;
+            }
+            if(j+1 < field.width){
+                neighbors[2] = field.current[i][j+1] == 1;
+            }
+            if(j-1 >= 0){
+                neighbors[3]  = field.current[i][j-1] == 1;
+            }
+            if(i-1 >= 0 && j-1 >= 0){
+                neighbors[4] = field.current[i-1][j-1] == 1;
+            }
+            if(i-1 >=0 && j+1 < field.width){
+                neighbors[5] = field.current[i-1][j+1] == 1;
+            }
+            if(i+1 < field.height && j-1 >= 0){
+                neighbors[6] = field.current[i+1][j-1] == 1;
+            }
+            if(i+1 < field.height && j+1 < field.width){
+                neighbors[7] = field.current[i+1][j+1] == 1;
+            }
+
+            int numberOfNeighbors = 0;
+
+            for(boolean b:neighbors){
+                if(b){
+                    numberOfNeighbors++;
+                }
+            }
+            return numberOfNeighbors;
+        }
+
+        public int[][] death(Field field){
+            int[][] survivedCells = new int[field.height][field.width];
+
+            for(int i = 0; i < field.height; i++){
+                for(int j = 0; j < field.width; j++){
+                    int num = neighbors(i, j, field);
+                    if(num > 3 || num < 2){
+                        survivedCells[i][j] = 0;
                     }
                     else{
-                        newCells[i][j] = 0;
+                        survivedCells[i][j] = field.current[i][j];
                     }
                 }
             }
-        }
-        return newCells;
-    }
-
-    public int neighbors(int i, int j){
-        boolean[] neighbors = new boolean[8];
-
-        Arrays.fill(neighbors, false);
-
-        if(i-1 >= 0){
-            neighbors[0] = field[i - 1][j] == 1;
-        }
-        if(i+1 < height){
-            neighbors[1] = field[i+1][j] == 1;
-        }
-        if(j+1 < width){
-            neighbors[2] = field[i][j+1] == 1;
-        }
-        if(j-1 >= 0){
-            neighbors[3]  = field[i][j-1] == 1;
-        }
-        if(i-1 >= 0 && j-1 >= 0){
-            neighbors[4] = field[i-1][j-1] == 1;
-        }
-        if(i-1 >=0 && j+1 < width){
-            neighbors[5] = field[i-1][j+1] == 1;
-        }
-        if(i+1 < height && j-1 >= 0){
-            neighbors[6] = field[i+1][j-1] == 1;
-        }
-        if(i+1 < height && j+1 < width){
-            neighbors[7] = field[i+1][j+1] == 1;
+            return survivedCells;
         }
 
-        int numberOfNeighbors = 0;
+        public void play(Field field) {
+            System.out.println("First generation:");
 
-        for(boolean b:neighbors){
-            if(b){
-                numberOfNeighbors++;
-            }
-        }
-        return numberOfNeighbors;
-    }
-
-    public int[][] death(){
-        int[][] survivedCells = new int[height][width];
-
-        for(int i = 0; i < height; i++){
-            for(int j = 0; j < width; j++){
-                int num = neighbors(i, j);
-                if(num > 3 || num < 2){
-                    survivedCells[i][j] = 0;
+            for(int i = 0; i < field.height; i++){
+                for(int j = 0; j < field.width; j++){
+                    System.out.print(field.current[i][j]);
                 }
-                else{
-                    survivedCells[i][j] = field[i][j];
-                }
-            }
-        }
-        return survivedCells;
-    }
-
-    public void play() {
-        System.out.println("First generation:");
-
-        for(int i = 0; i < height; i++){
-            for(int j = 0; j < width; j++){
-                System.out.print(field[i][j]);
+                System.out.println();
             }
             System.out.println();
-        }
-        System.out.println();
 
-        while(isAlive()) {
-            createNewGeneration();
+            while(isAlive(field)) {
+                createNewGeneration(field);
 
-            if(Arrays.deepEquals(oldField, field)) {
-                System.out.println("The following game goes in cycles.");
-                break;
-            }
-            else{
-                System.out.println("Next generation:");
+                if(Arrays.deepEquals(field.old, field.current)) {
+                    System.out.println("The following game goes in cycles.");
+                    break;
+                }
+                else{
+                    System.out.println("Next generation:");
 
-                for(int i = 0; i < height; i++){
-                    for(int j = 0; j < width; j++){
-                        System.out.print(field[i][j]);
+                    for(int i = 0; i < field.height; i++){
+                        for(int j = 0; j < field.width; j++){
+                            System.out.print(field.current[i][j]);
+                        }
+                        System.out.println();
                     }
                     System.out.println();
                 }
-                System.out.println();
             }
         }
     }
@@ -171,8 +174,9 @@ public class GameOfLife {
         int height = 5;
         int width = 7;
 
-        GameOfLife gameOfLife = new GameOfLife(height, width);
+        Field field = new Field(height, width);
+        Game game = new Game();
 
-        gameOfLife.play();
+        game.play(field);
     }
 }
